@@ -31,7 +31,8 @@ public abstract class Mob extends MapEntity {
     public void setLoc(int startX, int startY) {
 	if (parentMap.collides(startX, startY)) {
 	    System.err.println("Should not place Mob(" + mobName
-		    + ") in a non-walkable square (" + startX + "," + startY + ")");
+		    + ") in a non-walkable square (" + startX + "," + startY
+		    + ")");
 	}
 
 	targetMapX = mapX = startX;
@@ -39,7 +40,7 @@ public abstract class Mob extends MapEntity {
 
 	// TODO: this is probably where we should load the sprite sheet
 	// System.out.println("Mob '" + mobName + "' at (" + mapX + ", " + mapY
-	// 	+ ")");
+	// + ")");
     }
 
     public abstract void draw(Graphics2D g);
@@ -122,10 +123,10 @@ class LocalPlayerMob extends Mob {
 	mobName = "Local Player";
 
 	try {
-	    icon = ImageIO.read(new File("/Users/ajw/Downloads/Player.png"));
+	    icon = ImageIO.read(new File("bin/org/toadking/games/underwaterroguelike/Images/Player.png"));
 	} catch (IOException e) {
-	    // TODO Auto-generated catch block
 	    e.printStackTrace();
+	    System.exit(-1);
 	}
     }
 

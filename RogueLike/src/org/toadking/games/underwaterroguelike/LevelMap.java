@@ -47,14 +47,8 @@ public class LevelMap {
 	int r = -1;
 	if (max < min) { // Be forgiving if we get these backwards
 	    r = rnd.nextInt(min - max) + max;
-
-	    System.out.println("getRand(min=" + max + ", max=" + min + ") = "
-		    + r);
 	} else {
 	    r = rnd.nextInt(max - min) + min;
-
-	    System.out.println("getRand(min=" + min + ", max=" + max + ") = "
-		    + r);
 	}
 	return r;
     }
