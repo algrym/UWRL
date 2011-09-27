@@ -1,5 +1,7 @@
 package org.toadking.games.underwaterroguelike;
 
+import java.io.IOException;
+
 import javax.swing.JFrame;
 
 public class UnderWaterRogueLike {
@@ -26,6 +28,13 @@ public class UnderWaterRogueLike {
     }
 
     public static void main(String[] args) {
+	// TODO: remove this
+	try {
+	    System.out.println("User Directory: " + System.getProperty("user.dir"));
+	    System.out.println("Canonical Path: " + new java.io.File(".").getCanonicalPath());
+	} catch (IOException e) {
+	    e.printStackTrace();
+	}
 	new UnderWaterRogueLike();
     }
 }

@@ -11,7 +11,7 @@ public class GamePanel extends JPanel implements Runnable {
     private static final int PWIDTH = 1024;
     private static final int PHEIGHT = 768;
     private static final int NO_DELAYS_PER_YIELD = 16;
-    private static int MAX_FRAME_SKIPS = 5;
+    private static int MAX_FRAME_SKIPS = 2;
     private static int period = 10; // period between drawing in ms
 
     private LevelMap currentLevel;
@@ -23,15 +23,15 @@ public class GamePanel extends JPanel implements Runnable {
 
     private volatile boolean keepMoving = false;
     private volatile int lastKeyCode = 0;
-    private volatile CardinalDirection lastMoveDirection;
+    private volatile MapVector lastMoveDirection;
 
     // global variables for off-screen rendering
     private Graphics2D dbg2D;
     private BufferedImage dbImage2D = null;
     private GraphicsConfiguration gc;
 
-    // record stats every 1 second (roughly)
-    private static long MAX_STATS_INTERVAL = 1000L;
+    // record stats every 1 second (roughly) in millisecs
+    private static long MAX_STATS_INTERVAL = 10000L;
 
     // period between drawing in ms
     private static int NUM_FPS = 10;
@@ -80,12 +80,15 @@ public class GamePanel extends JPanel implements Runnable {
 	    else
 		averageFPS = totalFPS / NUM_FPS;
 
-	    System.out.println(timedf.format((double) statsInterval / 1000)
-		    + " "
-		    + timedf.format((double) realElapsedTime / 1000000000L)
-		    + "s " + df.format(timingError) + "% " + frameCount + "c "
-		    + df.format(actualFPS) + " " + df.format(averageFPS)
-		    + " afps");
+	    System.out
+		    .println("Display stats: Interval="
+			    + timedf.format((double) statsInterval / 1000)
+			    + "s realElapsedTime="
+			    + timedf.format((double) realElapsedTime / 1000000000L)
+			    + "s timingError=" + df.format(timingError)
+			    + "% frameCount=" + frameCount + "c actualFPS="
+			    + df.format(actualFPS) + " avgFPS="
+			    + df.format(averageFPS));
 
 	    prevStatsTime = timeNow;
 	    statsInterval = 0L; // reset
@@ -158,7 +161,7 @@ public class GamePanel extends JPanel implements Runnable {
 		skips++;
 	    }
 
-	    // reportStats(); // record/report statistics
+	    reportStats(); // record/report statistics
 	}
 	System.exit(0);
     }
@@ -198,10 +201,10 @@ public class GamePanel extends JPanel implements Runnable {
 	    fpsStore[i] = 0.0;
 
 	prevStatsTime = System.nanoTime();
-	
+
 	// Create game components
 	currentLevel = new LevelMap();
-	
+
 	// listen for mouse presses
 	addMouseListener(new MouseAdapter() {
 	    public void mousePressed(MouseEvent e) {
@@ -261,15 +264,15 @@ public class GamePanel extends JPanel implements Runnable {
 		case KeyEvent.VK_R:
 		    currentLevel.zoomIn();
 		    break;
-		    
+
 		case KeyEvent.VK_F:
 		    currentLevel.zoomDefault();
 		    break;
-		    
+
 		case KeyEvent.VK_V:
 		    currentLevel.zoomOut();
 		    break;
-		    
+
 		default:
 		    System.out.println("Unknown key pressed.  keyCode: "
 			    + keyCode);
@@ -302,15 +305,15 @@ public class GamePanel extends JPanel implements Runnable {
 	running = true;
     }
 
-//    private void pauseGame() {
-//	// called by the user to pause execution
-//	isPaused = true;
-//    }
+    // private void pauseGame() {
+    // // called by the user to pause execution
+    // isPaused = true;
+    // }
 
-//    private void resumeGame() {
-//	// called by the user to resume execution
-//	isPaused = false;
-//    }
+    // private void resumeGame() {
+    // // called by the user to resume execution
+    // isPaused = false;
+    // }
 
     public void stopGame() {
 	// called by the user to stop execution

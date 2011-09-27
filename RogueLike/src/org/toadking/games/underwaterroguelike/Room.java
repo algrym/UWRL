@@ -44,8 +44,8 @@ class RectangleRoom extends Room {
 
 	int newX = Math.max(x, 0);
 	int newY = Math.max(y, 0);
-	int newW = Math.min(x + width, parentMap.blockMap.length - 1) - x;
-	int newH = Math.min(y + height, parentMap.blockMap[0].length - 1) - y;
+	int newW = Math.min(x + width, LevelMap.getBlockMapWidth() - 1) - x;
+	int newH = Math.min(y + height, LevelMap.getBlockMapWidth() - 1) - y;
 
 	wallRect = new Rectangle(newX, newY, newW, newH);
     }
@@ -54,7 +54,7 @@ class RectangleRoom extends Room {
     public void mapFill() {
 	for (int i = wallRect.x; i < (wallRect.x + wallRect.width); i++) {
 	    for (int j = wallRect.y; j < (wallRect.y + wallRect.height); j++) {
-		parentMap.blockMap[i][j] = LevelMap.lbsAir;
+		parentMap.setBlockMap(i, j, LevelMap.lbsAir);
 	    }
 	}
     }

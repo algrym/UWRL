@@ -15,6 +15,8 @@ public abstract class LevelBlock {
 
     public abstract boolean isWalkable();
 
+    public abstract boolean isAutoWalkable();
+
     public abstract LevelBlock newBlock();
 
     public void draw(Graphics g, int x, int y, int blockSize) {
@@ -22,14 +24,16 @@ public abstract class LevelBlock {
 	g.fillRect(x, y, blockSize - GRIDLINEWIDTH, blockSize - GRIDLINEWIDTH);
     }
 
-    public void playerAction() {
+    public boolean action() {
 	System.out.println("Action on: " + this);
-	return;
+	return true; // was it successful?
     }
 
     public abstract String toString();
 
     public abstract String toJSONString();
+
+    public abstract Double getMoveCost();
 }
 
 class lbAir extends LevelBlock {
@@ -68,6 +72,16 @@ class lbAir extends LevelBlock {
     public String toJSONString() {
 	return new String("\"lbAir\"");
     }
+
+    @Override
+    public Double getMoveCost() {
+	return 1.0D;
+    }
+
+    @Override
+    public boolean isAutoWalkable() {
+	return isWalkable();
+    }
 }
 
 class lbBedRock extends LevelBlock {
@@ -99,6 +113,16 @@ class lbBedRock extends LevelBlock {
     @Override
     public String toJSONString() {
 	return null;
+    }
+
+    @Override
+    public Double getMoveCost() {
+	return Double.MAX_VALUE;
+    }
+
+    @Override
+    public boolean isAutoWalkable() {
+	return isWalkable();
     }
 }
 
@@ -142,52 +166,49 @@ class lbDoor extends LevelBlock {
     }
 
     @Override
-    public void playerAction() {
-	super.playerAction();
+    public boolean action() {
+	super.action();
 	isOpened = !isOpened;
+	// TODO: what if its locked?
+	return true;
     }
 
     public void draw(Graphics g, int x, int y, int blockSize) {
 	g.setColor(blockColor());
+	final int doorWidthMin = (int) Math.max(1, blockSize - GRIDLINEWIDTH);
+	final int doorWidthMax = (int) Math.max(1,
+		((0.2 * blockSize) - GRIDLINEWIDTH));
 
 	// TODO: should really open against a wall
 
 	switch (opensAwayFrom) {
 	case NORTH:
 	    if (isOpened)
-		g.fillRect((int) (x), y, (int) (0.2 * blockSize)
-			- GRIDLINEWIDTH, blockSize - GRIDLINEWIDTH);
+		g.fillRect(x, y, doorWidthMax, doorWidthMin);
 	    else
-		g.fillRect(x, (int) (y), blockSize - GRIDLINEWIDTH,
-			(int) (0.2 * blockSize) - GRIDLINEWIDTH);
+		g.fillRect(x, y, doorWidthMin, doorWidthMax);
 	    return;
 	case SOUTH:
 	    if (isOpened)
-		g.fillRect((int) (x + (0.9 * blockSize)), y,
-			(int) (0.2 * blockSize) - GRIDLINEWIDTH, blockSize
-				- GRIDLINEWIDTH);
+		g.fillRect((int) (x + (0.9 * blockSize)), y, doorWidthMax,
+			doorWidthMin);
 	    else
-		g.fillRect(x, (int) (y + (0.9 * blockSize)), blockSize
-			- GRIDLINEWIDTH, (int) (0.2 * blockSize)
-			- GRIDLINEWIDTH);
+		g.fillRect(x, (int) (y + (0.9 * blockSize)), doorWidthMin,
+			doorWidthMax);
 	    return;
 	case EAST:
 	    if (isOpened)
-		g.fillRect(x, (int) (y + (0.9 * blockSize)), blockSize
-			- GRIDLINEWIDTH, (int) (0.2 * blockSize)
-			- GRIDLINEWIDTH);
+		g.fillRect(x, (int) (y + (0.9 * blockSize)), doorWidthMin,
+			doorWidthMax);
 	    else
-		g.fillRect((int) (x), y, (int) (0.2 * blockSize)
-			- GRIDLINEWIDTH, blockSize - GRIDLINEWIDTH);
+		g.fillRect(x, y, doorWidthMax, doorWidthMin);
 	    return;
 	case WEST:
 	    if (isOpened)
-		g.fillRect(x, (int) (y), blockSize - GRIDLINEWIDTH,
-			(int) (0.2 * blockSize) - GRIDLINEWIDTH);
+		g.fillRect(x, y, doorWidthMin, doorWidthMax);
 	    else
-		g.fillRect((int) (x + (0.9 * blockSize)), y,
-			(int) (0.2 * blockSize) - GRIDLINEWIDTH, blockSize
-				- GRIDLINEWIDTH);
+		g.fillRect((int) (x + (0.9 * blockSize)), y, doorWidthMax,
+			doorWidthMin);
 	    return;
 
 	default:
@@ -205,5 +226,18 @@ class lbDoor extends LevelBlock {
     @Override
     public String toJSONString() {
 	return toString();
+    }
+
+    @Override
+    public Double getMoveCost() {
+	if (isOpened)
+	    return 1.0D;
+	else
+	    return 5.0D;
+    }
+
+    @Override
+    public boolean isAutoWalkable() {
+	return true;
     }
 }

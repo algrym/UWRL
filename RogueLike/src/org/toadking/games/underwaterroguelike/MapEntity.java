@@ -1,11 +1,11 @@
 package org.toadking.games.underwaterroguelike;
 
 public abstract class MapEntity {
-    int mapX, mapY;
-    CardinalDirection facing = CardinalDirection.NORTH;
-    LevelMap parentMap = null;
+    protected MapVector mapLocation;
+    protected CardinalDirection facing = CardinalDirection.NORTH;
+    final LevelMap parentMap;
     
-    public MapEntity (LevelMap lm) {
+    public MapEntity (final LevelMap lm) {
 	this.parentMap = lm;
     }
     

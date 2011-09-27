@@ -14,11 +14,11 @@ import java.util.ArrayList;
  * LevelMap
  */
 public class LevelMap {
-    private static final short LEVELMAXSIDE = 1000;
-    private static final short MINROOMS = 5;
-    private static final short MAXROOMS = 50;
+    private static final short BLOCKMAPWIDTH = 1000;
+    private static final short MINROOMS = 10;
+    private static final short MAXROOMS = 100;
 
-    LevelBlock[][] blockMap;
+    private LevelBlock[][] blockMap;
     private int mapWindowMinX = -1, mapWindowMinY = -1,
 	    mapWindowMaxX = Integer.MAX_VALUE,
 	    mapWindowMaxY = Integer.MAX_VALUE;
@@ -26,9 +26,11 @@ public class LevelMap {
     private long randSeed;
     static Random rnd = new Random();
 
-    // Static LevelBlock references to save memory
+    // Static references to save memory
     static final lbAir lbsAir = new lbAir();
     static final lbBedRock lbsBedRock = new lbBedRock();
+    static final lbDoor lbsDoor = new lbDoor(CardinalDirection.NORTH);
+    static final MapVector sMapVector = new MapVector();
 
     // Pixel size of blocks when drawn in the UI
     private static final int DEFAULTBLOCKSIZE = 20;
@@ -47,14 +49,8 @@ public class LevelMap {
 	int r = -1;
 	if (max < min) { // Be forgiving if we get these backwards
 	    r = rnd.nextInt(min - max) + max;
-
-	    System.out.println("getRand(min=" + max + ", max=" + min + ") = "
-		    + r);
 	} else {
 	    r = rnd.nextInt(max - min) + min;
-
-	    System.out.println("getRand(min=" + min + ", max=" + max + ") = "
-		    + r);
 	}
 	return r;
     }
@@ -82,7 +78,7 @@ public class LevelMap {
 		    blockMap[0].length / 2))
 		currentRoom.addToMap();
 	}
-	System.out.println("Rooms:" + roomList);
+	// System.out.println("Rooms:" + roomList);
 
 	// Create the new player and just sort of ... stick them in the middle
 	// of the map.
@@ -105,9 +101,11 @@ public class LevelMap {
 	    final int width = getRand(2 * doorSize, 20);
 	    final int height = getRand(2 * doorSize, 20);
 
-	    System.out.println("x=" + currentRoom.getX() + " w="
-		    + currentRoom.getWidth() + " h=" + currentRoom.getHeight()
-		    + " w'=" + width + " h'=" + height + " d=" + doorSize);
+	    // System.out.println("New Room: oldX=" + currentRoom.getX() +
+	    // " oldW="
+	    // + currentRoom.getWidth() + " oldH=" + currentRoom.getHeight()
+	    // + " newW=" + width + " newH=" + height + " doorSize=" +
+	    // doorSize);
 
 	    CardinalDirection doorDirection = CardinalDirection.NORTH;
 
@@ -207,7 +205,7 @@ public class LevelMap {
 	roomList = new ArrayList<Room>();
 
 	// Fill the whole map with solid earth
-	blockMap = new LevelBlock[LEVELMAXSIDE][LEVELMAXSIDE];
+	blockMap = new LevelBlock[BLOCKMAPWIDTH][BLOCKMAPWIDTH];
 	for (int i = 0; i < blockMap.length; i++) {
 	    for (int j = 0; j < blockMap[i].length; j++) {
 		blockMap[i][j] = lbsBedRock;
@@ -231,8 +229,8 @@ public class LevelMap {
 	// + " -> " + screenMapWidth + ", " + screenMapHeight);
 
 	// Center on the player
-	mapWindowMinX = LocalPlayer.mapX - (screenMapWidth / 2);
-	mapWindowMinY = LocalPlayer.mapY - (screenMapHeight / 2);
+	mapWindowMinX = LocalPlayer.mapLocation.getX() - (screenMapWidth / 2);
+	mapWindowMinY = LocalPlayer.mapLocation.getY() - (screenMapHeight / 2);
 
 	// Normalize the window edges before we use them
 	mapWindowMaxX = Math.min(mapWindowMinX + screenMapWidth + 1,
@@ -257,23 +255,25 @@ public class LevelMap {
 	// + "  " + mapWindowMinY + " - " + mapWindowMaxY);
 
 	// ensure the player is not within 10 map squares of the UI edge
-	while ((LocalPlayer.mapX < (mapWindowMinX + 10)) && (mapWindowMinX > 0)) {
+	while ((LocalPlayer.mapLocation.getX() < (mapWindowMinX + 10))
+		&& (mapWindowMinX > 0)) {
 	    mapWindowMinX--;
 	    mapWindowMaxX--;
 	}
 
-	while ((LocalPlayer.mapX > (mapWindowMaxX - 10))
+	while ((LocalPlayer.mapLocation.getX() > (mapWindowMaxX - 10))
 		&& (mapWindowMaxX < blockMap.length)) {
 	    mapWindowMinX++;
 	    mapWindowMaxX++;
 	}
 
-	while ((LocalPlayer.mapY < (mapWindowMinY + 10)) && (mapWindowMinY > 0)) {
+	while ((LocalPlayer.mapLocation.getY() < (mapWindowMinY + 10))
+		&& (mapWindowMinY > 0)) {
 	    mapWindowMinY--;
 	    mapWindowMaxY--;
 	}
 
-	while ((LocalPlayer.mapY > (mapWindowMaxY - 10))
+	while ((LocalPlayer.mapLocation.getY() > (mapWindowMaxY - 10))
 		&& (mapWindowMaxY < blockMap.length)) {
 	    mapWindowMinY++;
 	    mapWindowMaxY++;
@@ -328,15 +328,13 @@ public class LevelMap {
 
 	// inform on the position of the character
 	g.setColor(Color.white);
-	if ((LocalPlayer.mapX == LocalPlayer.targetMapX)
-		&& (LocalPlayer.mapY == LocalPlayer.targetMapY))
+	if (LocalPlayer.mapTarget.equals(LocalPlayer.mapLocation))
 
-	    g.drawString("(" + LocalPlayer.mapX + "," + LocalPlayer.mapY + ")",
-		    5, 20);
+	    g.drawString(LocalPlayer.mapLocation.toString(), 5, 20);
 	else
-	    g.drawString("(" + LocalPlayer.mapX + "," + LocalPlayer.mapY
-		    + ") -> (" + LocalPlayer.targetMapX + ","
-		    + LocalPlayer.targetMapY + ")", 5, 20);
+	    g.drawString(LocalPlayer.mapLocation + " -> "
+		    + LocalPlayer.mapTarget + " (" + LocalPlayer.movesLeft()
+		    + ")", 5, 20);
     }
 
     public void print() {
@@ -351,18 +349,36 @@ public class LevelMap {
 	}
     }
 
+    boolean collides(MapVector node, boolean isAuto) {
+	return collides(node.getX(), node.getY(), isAuto);
+    }
+
+    boolean collides(MapVector node) {
+	return collides(node.getX(), node.getY(), false);
+    }
+
     boolean collides(int mapX, int mapY) {
+	return collides(mapX, mapY, false);
+    }
+
+    boolean collides(int mapX, int mapY, boolean isAuto) {
+	// System.out.println ("CT (" + mapX + ", " + mapY + ")");
+
 	// forbid movement off the edge of the map
-	if ((mapX < 0) || (mapX > blockMap.length) || (mapY < 0)
-		|| (mapY > blockMap.length))
+	if ((mapX < 0) || (mapX >= blockMap.length) || (mapY < 0)
+		|| (mapY >= blockMap.length))
 	    return true;
 
 	// forbid collisions with the map
-	if (!blockMap[mapX][mapY].isWalkable())
-	    return true;
+	if (isAuto) {
+	    if (!blockMap[mapX][mapY].isAutoWalkable())
+		return true;
+	} else {
+	    if (!blockMap[mapX][mapY].isWalkable())
+		return true;
+	}
 
 	// TODO check for collisions with other mobs
-	// TODO handle collisions if stepSize > 1 (jump over obstacles)
 
 	return false; // Looks clear.
     }
@@ -371,36 +387,30 @@ public class LevelMap {
 	// convert UI dimensions to map dimensions and make this
 	// the player's new destination
 	LocalPlayer.moveTo(uiXToMap(mouseX), uiYToMap(mouseY));
-	fixWindowEdges();
     }
 
-    public void movePlayer(CardinalDirection degrees) {
-	LocalPlayer.moveStep(degrees);
-	fixWindowEdges();
+    public void movePlayer(MapVector d) {
+	LocalPlayer.moveStep(d);
     }
 
-    public CardinalDirection movePlayerNorth() {
-	LocalPlayer.moveStep(CardinalDirection.NORTH);
-	fixWindowEdges();
-	return CardinalDirection.NORTH;
+    public MapVector movePlayerNorth() {
+	LocalPlayer.moveStep(sMapVector.north());
+	return sMapVector.north();
     }
 
-    public CardinalDirection movePlayerSouth() {
-	LocalPlayer.moveStep(CardinalDirection.SOUTH);
-	fixWindowEdges();
-	return CardinalDirection.SOUTH;
+    public MapVector movePlayerSouth() {
+	LocalPlayer.moveStep(sMapVector.south());
+	return sMapVector.south();
     }
 
-    public CardinalDirection movePlayerWest() {
-	LocalPlayer.moveStep(CardinalDirection.WEST);
-	fixWindowEdges();
-	return CardinalDirection.WEST;
+    public MapVector movePlayerWest() {
+	LocalPlayer.moveStep(sMapVector.west());
+	return sMapVector.west();
     }
 
-    public CardinalDirection movePlayerEast() {
-	LocalPlayer.moveStep(CardinalDirection.EAST);
-	fixWindowEdges();
-	return CardinalDirection.EAST;
+    public MapVector movePlayerEast() {
+	LocalPlayer.moveStep(sMapVector.east());
+	return sMapVector.east();
     }
 
     public void gameUpdate() {
@@ -411,8 +421,10 @@ public class LevelMap {
     public void playerAction() {
 	// If the player is facing a map square with stuff in it
 	// call the action method on that area
-	int nextMapX = LocalPlayer.mapX + LocalPlayer.facing.getXProjection();
-	int nextMapY = LocalPlayer.mapY + LocalPlayer.facing.getYProjection();
+	int nextMapX = LocalPlayer.mapLocation.getX()
+		+ LocalPlayer.facing.getXProjection();
+	int nextMapY = LocalPlayer.mapLocation.getY()
+		+ LocalPlayer.facing.getYProjection();
 
 	System.out.println("Action: " + LocalPlayer.facing + " " + nextMapX
 		+ ", " + nextMapY);
@@ -425,7 +437,7 @@ public class LevelMap {
 	// TODO: check to see if the target block contains a mob
 
 	// Otherwise call action on the map area being faced
-	blockMap[nextMapX][nextMapY].playerAction();
+	blockMap[nextMapX][nextMapY].action();
     }
 
     public void zoomIn() {
@@ -441,5 +453,25 @@ public class LevelMap {
     public void zoomOut() {
 	mapWindowMinX = -1;
 	blockSize = Math.max(5, blockSize - 1);
+    }
+
+    LevelBlock getBlockMap(MapVector m) {
+	return getBlockMap(m.getX(), m.getY());
+    }
+
+    LevelBlock getBlockMap(int x, int y) {
+	// Ensure we're not attempting something off the map edge
+	if ((x < 0) || (x >= blockMap.length) || (y < 0)
+		|| (y >= blockMap[0].length))
+	    return null;
+	return blockMap[x][y];
+    }
+
+    void setBlockMap(int x, int y, LevelBlock lb) {
+	this.blockMap[x][y] = lb;
+    }
+
+    public static short getBlockMapWidth() {
+	return BLOCKMAPWIDTH;
     }
 }
