@@ -131,8 +131,16 @@ public abstract class Mob extends MapEntity {
 	if (parentMap.getBlockMap(next).getClass() == LevelMap.lbsDoor
 		.getClass()) {
 	    lbDoor d = (lbDoor) parentMap.getBlockMap(next);
-	    d.action();
+	    if (!d.isOpened) // open the door if its closed.
+		d.action();
 	    // TODO: what about locked doors
+	}
+
+	// Check for movement collision
+	if (parentMap.collides(next)) {
+	    moveList.clear();
+	    mapTarget = mapLocation;
+	    return;
 	}
 
 	// Move and update the map zoom
@@ -141,64 +149,6 @@ public abstract class Mob extends MapEntity {
 
 	// System.out.println("updatePosition: " + mapLocation + " remaining: "
 	// + moveList);
-    }
-
-    private void oldUpdatePosition() {
-	// Do we need to move at all?
-	if (!mapTarget.equals(mapLocation)) {
-	    // Get the difference between the target and the player's location
-	    float diffX = (mapTarget.getX() - mapLocation.getX());
-	    float diffY = -(mapTarget.getY() - mapLocation.getY());
-
-	    // normalize the vector along the same angle
-	    float dirLen = (float) Math.sqrt((diffX * diffX) + (diffY * diffY));
-
-	    // create the normal vector for one step
-	    int normalX = Math.round(diffX / dirLen);
-	    int normalY = Math.round(diffY / dirLen);
-
-	    // determine how facing should be changed
-	    if (Math.abs(normalX) > Math.abs(normalY)) {
-		if (normalX > 0)
-		    facing = CardinalDirection.EAST;
-		else
-		    facing = CardinalDirection.WEST;
-	    } else {
-		if (normalY > 0)
-		    facing = CardinalDirection.NORTH;
-		else
-		    facing = CardinalDirection.SOUTH;
-	    }
-
-	    // System.out.println("updatePosition: (" + mapX + ", " + mapY +
-	    // ") -> ("
-	    // + targetMapX + ", " + targetMapY + ") diff: (" + diffX + ", "
-	    // + diffY + ") normal: (" + normalX + ", " + normalY + ")");
-
-	    int mapX = mapLocation.getX();
-	    int mapY = mapLocation.getY();
-
-	    // are we legal to move in the direction listed?
-	    if (parentMap.collides(mapX + normalX, mapY - normalY)) {
-		// not legal at all, so reset the final location to present
-		mapTarget = mapLocation;
-	    } else if (parentMap.collides(mapX + normalX, mapY)) {
-		// only legal to move along normalX
-		mapY -= normalY;
-	    } else if (parentMap.collides(mapX, mapY - normalY)) {
-		// only legal to move along normalY
-		mapX += normalX;
-	    } else {
-		// legal to move as directed
-		mapX += normalX;
-		mapY -= normalY;
-	    }
-
-	    mapLocation = new MapVector(mapX, mapY);
-
-	    // Update the map to account for the move.
-	    parentMap.fixWindowEdges();
-	}
     }
 
     public void gameUpdate() {
@@ -248,6 +198,14 @@ class LocalPlayerMob extends Mob {
 	    xform.scale(iconScale, iconScale);
 
 	    g.drawImage(icon, xform, null);
+	}
+
+	// Draw the target if we need to move
+	if ((moveList != null) && (!moveList.isEmpty())) {
+	    g.setColor(Color.green);
+	    g.drawOval(parentMap.mapXToUI(mapTarget.getX()),
+		    parentMap.mapYToUI(mapTarget.getY()),
+		    parentMap.blockSize, parentMap.blockSize);
 	}
     }
 }

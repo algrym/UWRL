@@ -22,6 +22,8 @@ public class LevelMap {
     private int mapWindowMinX = -1, mapWindowMinY = -1,
 	    mapWindowMaxX = Integer.MAX_VALUE,
 	    mapWindowMaxY = Integer.MAX_VALUE;
+    private MapVector lbHighlight;
+    private MapVector actionTarget;
 
     private long randSeed;
     static Random rnd = new Random();
@@ -314,9 +316,11 @@ public class LevelMap {
 	// TODO: Background needs to repeat over the size of the map
 	// TODO: Background needs to move with the map, not the screen
 
+	// Move the map edges to center on the player
 	if (mapWindowMinX < 0)
 	    fixWindowEdges(width, height);
 
+	// Draw the map
 	for (int i = mapWindowMinX; i < mapWindowMaxX; i++) {
 	    for (int j = mapWindowMinY; j < mapWindowMaxY; j++) {
 		if (blockMap[i][j] != null) {
@@ -324,9 +328,11 @@ public class LevelMap {
 		}
 	    }
 	}
+
+	// Draw the player
 	LocalPlayer.draw(g);
 
-	// inform on the position of the character
+	// Highlight the position of the character's next move
 	g.setColor(Color.white);
 	if (LocalPlayer.mapTarget.equals(LocalPlayer.mapLocation))
 
@@ -335,6 +341,24 @@ public class LevelMap {
 	    g.drawString(LocalPlayer.mapLocation + " -> "
 		    + LocalPlayer.mapTarget + " (" + LocalPlayer.movesLeft()
 		    + ")", 5, 20);
+
+	// Highlight a block, if requested
+	g.setColor(Color.yellow);
+	if (lbHighlight != null) {
+	    g.drawRect(mapXToUI(lbHighlight.getX()),
+		    mapYToUI(lbHighlight.getY()), blockSize, blockSize);
+	    g.drawString(getBlockMap(lbHighlight).toString(),
+		    mapXToUI(lbHighlight.getX()) - blockSize,
+		    mapYToUI(lbHighlight.getY()) - (int) (0.2 * blockSize));
+	}
+	
+	// Highlight the action target
+	if (actionTarget != null) {
+	    g.setColor(Color.red);
+	    g.drawOval(mapXToUI(actionTarget.getX()),
+		    mapYToUI(actionTarget.getY()),
+		    blockSize, blockSize);
+	}
     }
 
     public void print() {
@@ -473,5 +497,21 @@ public class LevelMap {
 
     public static short getBlockMapWidth() {
 	return BLOCKMAPWIDTH;
+    }
+
+    public void lookAt(final int x, final int y) {
+	MapVector newClick = new MapVector(uiXToMap(x), uiYToMap(y));
+	if (lbHighlight == null) {
+	    lbHighlight = newClick;
+	    return;
+	}
+	if (lbHighlight.equals(newClick))
+	    lbHighlight = null;
+	else
+	    lbHighlight = newClick;
+    }
+
+    public void clickAction(int x, int y) {
+	 actionTarget = new MapVector(uiXToMap(x), uiYToMap(y));
     }
 }

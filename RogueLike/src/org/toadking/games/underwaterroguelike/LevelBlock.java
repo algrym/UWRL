@@ -7,7 +7,7 @@ import java.awt.Graphics;
 import java.awt.Color;
 
 public abstract class LevelBlock {
-    protected static final int GRIDLINEWIDTH = 1;
+    protected static final int GRIDLINEWIDTH = 0;
 
     public abstract Color blockColor();
 
@@ -64,7 +64,7 @@ class lbAir extends LevelBlock {
 
     @Override
     public String toString() {
-	return new String("lbAir");
+	return new String("Air");
 
     }
 
@@ -107,7 +107,7 @@ class lbBedRock extends LevelBlock {
 
     @Override
     public String toString() {
-	return new String("lbBedRock");
+	return new String("Bedrock");
     }
 
     @Override
@@ -220,7 +220,10 @@ class lbDoor extends LevelBlock {
 
     @Override
     public String toString() {
-	return new String("\"lbDoor\": {\"isOpened\": \"" + isOpened + "\"}");
+	if (isOpened)
+	    return new String("Open Door");
+	else
+	    return new String("Closed Door");
     }
 
     @Override

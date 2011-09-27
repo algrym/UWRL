@@ -5,6 +5,7 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.text.DecimalFormat;
 import javax.swing.*;
+import javax.swing.event.MouseInputAdapter;
 
 public class GamePanel extends JPanel implements Runnable {
     private static final long serialVersionUID = 1L;
@@ -205,10 +206,30 @@ public class GamePanel extends JPanel implements Runnable {
 	// Create game components
 	currentLevel = new LevelMap();
 
-	// listen for mouse presses
+	// listen for mouse wheel movement
+	addMouseWheelListener(new MouseWheelListener() {
+	    public void mouseWheelMoved(MouseWheelEvent e) {
+		if (e.getWheelRotation() > 0)
+		    currentLevel.zoomIn();
+		else
+		    currentLevel.zoomOut();
+	    }
+	});
+
+	// listen for mouse clicks
 	addMouseListener(new MouseAdapter() {
-	    public void mousePressed(MouseEvent e) {
-		currentLevel.movePlayerClick(e.getX(), e.getY());
+	    public void mouseClicked(MouseEvent e) {
+		if (e.getButton() == MouseEvent.BUTTON1) {
+		    if (e.getClickCount() == 2)
+			// DOUBLE LEFT CLICK
+			currentLevel.movePlayerClick(e.getX(), e.getY());
+		    else
+			// LEFT CLICK
+			currentLevel.lookAt(e.getX(), e.getY());
+		} else if (e.getButton() == MouseEvent.BUTTON3) {
+		    // RIGHT CLICK
+		    currentLevel.clickAction(e.getX(), e.getY());
+		}
 	    }
 	});
     }
