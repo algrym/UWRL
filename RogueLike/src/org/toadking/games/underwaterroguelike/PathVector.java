@@ -5,18 +5,42 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class PathVector extends AStar<MapVector> {
+    private final MapVector start;
     private final MapVector target;
     private final LevelMap parentMap;
-    // private HashMap<MapVector, Boolean> vectorCache;
-    private static final MapVector[] MOVEOPTIONS = { new MapVector().north(),
+    private final boolean canOpendoors;
+    private LinkedList<MapVector> moveList = null;
+    private boolean isMoveListValid = true;
+
+    static final MapVector[] MOVEOPTIONS = { new MapVector().north(),
 	    new MapVector().south(), new MapVector().east(),
 	    new MapVector().west(), new MapVector().northEast(),
 	    new MapVector().northWest(), new MapVector().southEast(),
 	    new MapVector().SouthWest() };
 
-    public PathVector(final MapVector newTarget, final LevelMap newParentMap) {
-	target = newTarget;
+    public PathVector(final LevelMap newParentMap,
+	    final boolean newCanOpendoors, final MapVector newStart,
+	    final MapVector newTarget) {
+
 	parentMap = newParentMap;
+	canOpendoors = newCanOpendoors;
+	start = newStart;
+	target = newTarget;
+
+	// can we handle the move in one step?
+	for (int i = 0; i < MOVEOPTIONS.length; i++) {
+	    if (target == start.add(MOVEOPTIONS[i])) {
+		moveList.add(target);
+		return;
+	    }
+	}
+
+	// calculate the path from start to destination
+	moveList = compute(start);
+	if (moveList == null) {
+	    // We can't get there from here, so do nothing
+	    moveList = new LinkedList<MapVector>();
+	}
     }
 
     @Override
@@ -47,12 +71,27 @@ public class PathVector extends AStar<MapVector> {
 	List<MapVector> ret = new LinkedList<MapVector>();
 
 	for (MapVector d : MOVEOPTIONS) {
-	    if (!parentMap.collides(node.getX(), node.getY(), true))
+	    if (!parentMap.collides(node.getX(), node.getY(), canOpendoors))
 		ret.add(node.add(d));
 	}
 
 	// System.out.println("Checking from " + node + " to " + ret);
 
 	return ret;
+    }
+
+    public int movesLeft() {
+	// TODO Auto-generated method stub
+	if (moveList == null)
+	    return 0;
+	else
+	    return moveList.size();
+    }
+
+    public MapVector getNextMove() {
+	if ((moveList != null) && (!moveList.isEmpty()))
+	    return moveList.removeFirst();
+	else
+	    return null;
     }
 }

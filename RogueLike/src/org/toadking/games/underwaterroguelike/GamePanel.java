@@ -32,7 +32,7 @@ public class GamePanel extends JPanel implements Runnable {
     private GraphicsConfiguration gc;
 
     // record stats every 1 second (roughly) in millisecs
-    private static long MAX_STATS_INTERVAL = 10000L;
+    private static long MAX_STATS_INTERVAL = 1000L;
 
     // period between drawing in ms
     private static int NUM_FPS = 10;
@@ -222,13 +222,22 @@ public class GamePanel extends JPanel implements Runnable {
 		if (e.getButton() == MouseEvent.BUTTON1) {
 		    if (e.getClickCount() == 2)
 			// DOUBLE LEFT CLICK
+<<<<<<< HEAD
 			currentLevel.movePlayerClick(e.getX(), e.getY());
+=======
+			currentLevel.clickAction(e.getX(), e.getY());
+>>>>>>> - Added marking of destination.
 		    else
 			// LEFT CLICK
 			currentLevel.lookAt(e.getX(), e.getY());
 		} else if (e.getButton() == MouseEvent.BUTTON3) {
 		    // RIGHT CLICK
+<<<<<<< HEAD
 		    currentLevel.clickAction(e.getX(), e.getY());
+=======
+		    currentLevel.movePlayerClick(e.getX(), e.getY());
+
+>>>>>>> - Added marking of destination.
 		}
 	    }
 	});

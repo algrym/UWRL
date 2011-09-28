@@ -27,17 +27,17 @@ public abstract class Mob extends MapEntity {
     float diameter = 0.75f;
     protected MapVector mapTarget;
     int count = 0;
+    boolean canOpendoors = true;
 
-    LinkedList<MapVector> moveList = new LinkedList<MapVector>();
-    volatile boolean isMoveListValid = true;
+    protected PathVector path;
 
     public Mob(LevelMap lm) {
 	super(lm);
     }
 
     public String movesLeft() {
-	if ((isMoveListValid) && (moveList != null))
-	    return ("" + moveList.size());
+	if (path != null)
+	    return Integer.toString(path.movesLeft());
 	else
 	    return "?";
     }
@@ -51,7 +51,7 @@ public abstract class Mob extends MapEntity {
 
 	mapLocation = new MapVector(startX, startY);
 	mapTarget = mapLocation;
-	moveList.clear();
+	path = null;
 
 	// TODO: this is probably where we should load the sprite sheet
 	// System.out.println("Mob '" + mobName + "' at (" + mapX + ", " + mapY
@@ -60,41 +60,43 @@ public abstract class Mob extends MapEntity {
 
     public abstract void draw(Graphics2D g);
 
+    public void moveStop() {
+	path = null;
+	mapTarget = mapLocation;
+    }
+
     public void moveStep(MapVector d) {
+	moveStop();
 	mapTarget = mapLocation.add(d);
 
-	if (parentMap.collides(mapTarget)) {
-	    mapTarget = mapLocation;
-	    return;
-	}
+	if (parentMap.collides(mapTarget))
+	    moveStop();
+	else
+	    path = new PathVector(parentMap, canOpendoors, mapLocation,
+		    mapTarget);
 
 	// System.out.println("moveStep: " + mapLocation + " + " + d + " = "
 	// + mapTarget);
-	moveList.clear();
     }
 
-    public void moveTo(final int newTargetMapX, final int newTargetMapY) {
-	mapTarget = new MapVector(newTargetMapX, newTargetMapY);
+    public void moveTo(final MapVector newTarget) {
+	moveStop();
+	mapTarget = newTarget;
 	// System.out.println("moveTo: " + mapLocation + " -> " + mapTarget);
 
-	// Threading: don't move until the move list is finished
-	isMoveListValid = false;
-	findPath();
+	path = new PathVector(parentMap, canOpendoors, mapLocation, mapTarget);
     }
 
-    private void findPath() {
-	PathVector path = new PathVector(mapTarget, parentMap);
-	moveList = path.compute(mapLocation);
+    protected void findPath() {
 
 	// Threading: don't move until the move list is finished
-	isMoveListValid = true;
 
 	// System.out.println("From " + mapLocation + " to " + mapTarget +
 	// " in "
 	// + path.getExpandedCounter() + " tries via " + moveList);
     }
 
-    private void updatePosition() {
+    protected void updatePosition() {
 	// Attempting A* as per
 	// http://www.policyalmanac.org/games/aStarTutorial.htm
 
@@ -102,27 +104,17 @@ public abstract class Mob extends MapEntity {
 	if (mapTarget.equals(mapLocation))
 	    return; // we're where we should be
 
-	// Threading: don't move until the move list is finished
-	if (isMoveListValid == false)
-	    return;
+	// if the path is null, we can't get there from here
 
-	// if the list is null, we can't get there from here
-	if (moveList == null) {
-	    // System.out.println("updatePosition: NO PATH from " + mapLocation
-	    // + " to " + mapTarget);
-	    mapTarget = mapLocation;
-	    moveList = new LinkedList<MapVector>();
-	    return;
-	}
-
-	// Figure out the next move either by
+	// Just return if there is nowhere to go
 	MapVector next;
-	if (moveList.isEmpty())
-	    // can we take a quick movement jump?
-	    next = mapTarget;
+	if (path != null)
+	    next = path.getNextMove();
 	else
-	    // process the next step in the queue
-	    next = moveList.removeFirst();
+	    return;
+
+	if (next == null)
+	    return;
 
 	// Determine which direction we should be facing
 	facing = mapLocation.nearestDirection(next);
@@ -138,8 +130,12 @@ public abstract class Mob extends MapEntity {
 
 	// Check for movement collision
 	if (parentMap.collides(next)) {
+<<<<<<< HEAD
 	    moveList.clear();
 	    mapTarget = mapLocation;
+=======
+	    path = null;
+>>>>>>> - Added marking of destination.
 	    return;
 	}
 
@@ -155,7 +151,7 @@ public abstract class Mob extends MapEntity {
 	// TODO: this should take the event queue into account
 	if (count-- <= 0) {
 	    updatePosition();
-	    count = 30;
+	    count = 20;
 	}
     }
 }
@@ -167,6 +163,7 @@ class LocalPlayerMob extends Mob {
     public LocalPlayerMob(LevelMap lm) {
 	super(lm);
 	mobName = "Local Player";
+	canOpendoors = true;
 
 	try {
 	    icon = ImageIO
@@ -201,11 +198,19 @@ class LocalPlayerMob extends Mob {
 	}
 
 	// Draw the target if we need to move
+<<<<<<< HEAD
 	if ((moveList != null) && (!moveList.isEmpty())) {
 	    g.setColor(Color.green);
 	    g.drawOval(parentMap.mapXToUI(mapTarget.getX()),
 		    parentMap.mapYToUI(mapTarget.getY()),
 		    parentMap.blockSize, parentMap.blockSize);
+=======
+	if ((path != null) && (path.movesLeft() > 2)) {
+	    g.setColor(Color.green);
+	    g.drawOval(parentMap.mapXToUI(mapTarget.getX()),
+		    parentMap.mapYToUI(mapTarget.getY()), parentMap.blockSize,
+		    parentMap.blockSize);
+>>>>>>> - Added marking of destination.
 	}
     }
 }

@@ -58,6 +58,11 @@ public class MapVector {
 	return new MapVector((this.X + other.X), (this.Y + other.Y));
     }
 
+    public MapVector scale(Double d) {
+	return new MapVector((int) Math.round(this.X * d),
+		(int) Math.round(this.Y * d));
+    }
+
     @Override
     public String toString() {
 	return new String("(" + X + ", " + Y + ")");

@@ -15,8 +15,10 @@ import java.util.ArrayList;
  */
 public class LevelMap {
     private static final short BLOCKMAPWIDTH = 1000;
-    private static final short MINROOMS = 10;
-    private static final short MAXROOMS = 100;
+    private static final short MINROOMS = 1;
+    private static final short MAXROOMS = 10;
+    private static final short MINMOBS = 5;
+    private static final short MAXMOBS = 6;
 
     private LevelBlock[][] blockMap;
     private int mapWindowMinX = -1, mapWindowMinY = -1,
@@ -39,15 +41,15 @@ public class LevelMap {
     int blockSize = DEFAULTBLOCKSIZE;
 
     ArrayList<Room> roomList;
+    ArrayList<Mob> mobList;
 
-    // ArrayList<Mob> mobList = new ArrayList<Mob>();
     Mob LocalPlayer = new LocalPlayerMob(this);
 
     public void save() {
 	// JSON Validator: http://jsonformatter.curiousconcept.com/
     }
 
-    private int getRand(final int min, final int max) {
+    int getRand(final int min, final int max) {
 	int r = -1;
 	if (max < min) { // Be forgiving if we get these backwards
 	    r = rnd.nextInt(min - max) + max;
@@ -88,8 +90,8 @@ public class LevelMap {
 		(int) (blockMap[0].length / 2.0));
 
 	// loop until we have "enough rooms"
-	short maxRooms = (short) getRand(MINROOMS, MAXROOMS);
-	System.out.println("Generating up to " + maxRooms + " rooms.");
+	short maxFeatures = (short) getRand(MINROOMS, MAXROOMS);
+	System.out.println("Generating up to " + maxFeatures + " rooms.");
 
 	do {
 	    // Pick a room at random
@@ -196,15 +198,30 @@ public class LevelMap {
 	    }
 
 	    // Go back to "pick a room at random", until the dungeon is complete
-	} while (roomList.size() < maxRooms);
+	} while (roomList.size() < maxFeatures);
 
 	// Add the up and down staircases at random points in map
 	// Finally, sprinkle some monsters and items liberally over dungeon
+	maxFeatures = (short) getRand(MINMOBS, MAXMOBS);
+	do {
+	    // Pick a room at random
+	    currentRoom = roomList.get(getRand(0, roomList.size()));
+
+	    // Pick a spot in that room for a zombie!
+	    MapVector node = new MapVector(currentRoom.getX()
+		    + getRand(0, currentRoom.getWidth()), currentRoom.getY()
+		    + getRand(0, currentRoom.getHeight()));
+
+	    // add the zombie to the mob list!
+	    mobList.add(new Zombie(this, node));
+
+	} while (mobList.size() < maxFeatures);
     }
 
     private void blankLevelMap() {
-	// Reset the roomList
+	// Reset the roomList and mobLIst
 	roomList = new ArrayList<Room>();
+	mobList = new ArrayList<Mob>();
 
 	// Fill the whole map with solid earth
 	blockMap = new LevelBlock[BLOCKMAPWIDTH][BLOCKMAPWIDTH];
@@ -332,6 +349,14 @@ public class LevelMap {
 	// Draw the player
 	LocalPlayer.draw(g);
 
+<<<<<<< HEAD
+=======
+	// Draw the mobs
+	for (Mob m : mobList) {
+	    m.draw(g);
+	}
+
+>>>>>>> - Added marking of destination.
 	// Highlight the position of the character's next move
 	g.setColor(Color.white);
 	if (LocalPlayer.mapTarget.equals(LocalPlayer.mapLocation))
@@ -351,13 +376,21 @@ public class LevelMap {
 		    mapXToUI(lbHighlight.getX()) - blockSize,
 		    mapYToUI(lbHighlight.getY()) - (int) (0.2 * blockSize));
 	}
+<<<<<<< HEAD
 	
+=======
+
+>>>>>>> - Added marking of destination.
 	// Highlight the action target
 	if (actionTarget != null) {
 	    g.setColor(Color.red);
 	    g.drawOval(mapXToUI(actionTarget.getX()),
+<<<<<<< HEAD
 		    mapYToUI(actionTarget.getY()),
 		    blockSize, blockSize);
+=======
+		    mapYToUI(actionTarget.getY()), blockSize, blockSize);
+>>>>>>> - Added marking of destination.
 	}
     }
 
@@ -410,7 +443,7 @@ public class LevelMap {
     public void movePlayerClick(final int mouseX, final int mouseY) {
 	// convert UI dimensions to map dimensions and make this
 	// the player's new destination
-	LocalPlayer.moveTo(uiXToMap(mouseX), uiYToMap(mouseY));
+	LocalPlayer.moveTo(new MapVector(uiXToMap(mouseX), uiYToMap(mouseY)));
     }
 
     public void movePlayer(MapVector d) {
@@ -440,6 +473,11 @@ public class LevelMap {
     public void gameUpdate() {
 	// update player
 	LocalPlayer.gameUpdate();
+
+	// update the mobs
+	for (Mob m : mobList) {
+	    m.gameUpdate();
+	}
     }
 
     public void playerAction() {
@@ -512,6 +550,10 @@ public class LevelMap {
     }
 
     public void clickAction(int x, int y) {
+<<<<<<< HEAD
 	 actionTarget = new MapVector(uiXToMap(x), uiYToMap(y));
+=======
+	actionTarget = new MapVector(uiXToMap(x), uiYToMap(y));
+>>>>>>> - Added marking of destination.
     }
 }
