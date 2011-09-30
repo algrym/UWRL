@@ -10,7 +10,6 @@ public class PathVector extends AStar<MapVector> {
     private final LevelMap parentMap;
     private final boolean canOpendoors;
     private LinkedList<MapVector> moveList = null;
-    private boolean isMoveListValid = true;
 
     static final MapVector[] MOVEOPTIONS = { new MapVector().north(),
 	    new MapVector().south(), new MapVector().east(),
@@ -26,11 +25,12 @@ public class PathVector extends AStar<MapVector> {
 	canOpendoors = newCanOpendoors;
 	start = newStart;
 	target = newTarget;
+	moveList = new LinkedList<MapVector>();
 
 	// can we handle the move in one step?
-	for (int i = 0; i < MOVEOPTIONS.length; i++) {
-	    if (target == start.add(MOVEOPTIONS[i])) {
-		moveList.add(target);
+	for (MapVector m : MOVEOPTIONS) {
+	    if (target.equals(start.add(m))) {
+		moveList.addLast(target);
 		return;
 	    }
 	}
@@ -81,9 +81,8 @@ public class PathVector extends AStar<MapVector> {
     }
 
     public int movesLeft() {
-	// TODO Auto-generated method stub
 	if (moveList == null)
-	    return 0;
+	    return -1;
 	else
 	    return moveList.size();
     }
@@ -94,4 +93,8 @@ public class PathVector extends AStar<MapVector> {
 	else
 	    return null;
     }
+
+    public String toString() {
+	return moveList.toString();
+    };
 }

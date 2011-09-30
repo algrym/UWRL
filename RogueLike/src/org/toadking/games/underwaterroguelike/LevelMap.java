@@ -15,10 +15,10 @@ import java.util.ArrayList;
  */
 public class LevelMap {
     private static final short BLOCKMAPWIDTH = 1000;
-    private static final short MINROOMS = 1;
-    private static final short MAXROOMS = 10;
-    private static final short MINMOBS = 5;
-    private static final short MAXMOBS = 6;
+    private static final short MINROOMS = 20;
+    private static final short MAXROOMS = 100;
+    private static final short MINMOBS = 20;
+    private static final short MAXMOBS = 50;
 
     private LevelBlock[][] blockMap;
     private int mapWindowMinX = -1, mapWindowMinY = -1,
@@ -26,7 +26,7 @@ public class LevelMap {
 	    mapWindowMaxY = Integer.MAX_VALUE;
     private MapVector lbHighlight;
     private MapVector actionTarget;
-
+    
     private long randSeed;
     static Random rnd = new Random();
 
@@ -42,8 +42,9 @@ public class LevelMap {
 
     ArrayList<Room> roomList;
     ArrayList<Mob> mobList;
+    EventQueue eventQueue;
 
-    Mob LocalPlayer = new LocalPlayerMob(this);
+    Mob LocalPlayer;
 
     public void save() {
 	// JSON Validator: http://jsonformatter.curiousconcept.com/
@@ -212,16 +213,24 @@ public class LevelMap {
 		    + getRand(0, currentRoom.getWidth()), currentRoom.getY()
 		    + getRand(0, currentRoom.getHeight()));
 
-	    // add the zombie to the mob list!
-	    mobList.add(new Zombie(this, node));
+	    // Create a zombie and add them to the eventqueue and moblists
+	    Zombie z = new Zombie(this, node);
+	    z.setMobName("Zombie " + mobList.size());
+	    mobList.add(z);
+	    eventQueue.enqueue(z);
 
 	} while (mobList.size() < maxFeatures);
     }
 
     private void blankLevelMap() {
-	// Reset the roomList and mobLIst
+	// Reset this level
 	roomList = new ArrayList<Room>();
 	mobList = new ArrayList<Mob>();
+
+	eventQueue = new EventQueue();
+
+	LocalPlayer = new LocalPlayerMob(this);
+	eventQueue.enqueue(LocalPlayer);
 
 	// Fill the whole map with solid earth
 	blockMap = new LevelBlock[BLOCKMAPWIDTH][BLOCKMAPWIDTH];
@@ -230,11 +239,9 @@ public class LevelMap {
 		blockMap[i][j] = lbsBedRock;
 	    }
 	}
-
     }
 
-    private void fixWindowEdges(final int screenUIWidth,
-	    final int screenUIHeight) {
+    void fixWindowEdges(final int screenUIWidth, final int screenUIHeight) {
 
 	// Reset these values so ui?toMap conversions work
 	mapWindowMinX = 0;
@@ -435,7 +442,12 @@ public class LevelMap {
 		return true;
 	}
 
-	// TODO check for collisions with other mobs
+	// check for collisions with other mobs
+	for (Mob m : mobList) {
+	    if ((mapX == m.mapLocation.getX())
+		    && (mapY == m.mapLocation.getY()))
+		return true;
+	}
 
 	return false; // Looks clear.
     }
@@ -478,6 +490,9 @@ public class LevelMap {
 	for (Mob m : mobList) {
 	    m.gameUpdate();
 	}
+
+	// Perform actions according to the event queue
+	eventQueue.updateTime();
     }
 
     public void playerAction() {

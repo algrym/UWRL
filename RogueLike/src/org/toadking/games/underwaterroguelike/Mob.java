@@ -20,10 +20,10 @@ import javax.imageio.ImageIO;
  * 
  */
 
-public abstract class Mob extends MapEntity {
+public abstract class Mob extends MapEntity implements GameQueueObject {
     static final float MINMOVETOLERANCE = 0.5f;
 
-    String mobName = "Urist";
+    private String mobName = "Urist McRandomMob";
     float diameter = 0.75f;
     protected MapVector mapTarget;
     int count = 0;
@@ -35,6 +35,21 @@ public abstract class Mob extends MapEntity {
 	super(lm);
     }
 
+    public Mob(LevelMap lm, MapVector node) {
+	super(lm);
+	this.setLoc(node.getX(), node.getY());
+    }
+
+    public boolean gameQueueUpdate() {
+	// System.out.println(getMobName() + " updating!");
+	updatePosition();
+	return true; // yes, this item should be requeued
+    }
+
+    public long nextUpdateTime() {
+	return 100L; // requeue for movement every so many ticks
+    }
+
     public String movesLeft() {
 	if (path != null)
 	    return Integer.toString(path.movesLeft());
@@ -44,7 +59,7 @@ public abstract class Mob extends MapEntity {
 
     public void setLoc(int startX, int startY) {
 	if (parentMap.collides(startX, startY)) {
-	    System.err.println("Should not place Mob(" + mobName
+	    System.err.println("Should not place Mob(" + getMobName()
 		    + ") in a non-walkable square (" + startX + "," + startY
 		    + ")");
 	}
@@ -82,37 +97,29 @@ public abstract class Mob extends MapEntity {
     public void moveTo(final MapVector newTarget) {
 	moveStop();
 	mapTarget = newTarget;
-	// System.out.println("moveTo: " + mapLocation + " -> " + mapTarget);
 
 	path = new PathVector(parentMap, canOpendoors, mapLocation, mapTarget);
-    }
 
-    protected void findPath() {
-
-	// Threading: don't move until the move list is finished
-
-	// System.out.println("From " + mapLocation + " to " + mapTarget +
-	// " in "
-	// + path.getExpandedCounter() + " tries via " + moveList);
+	// System.out.println(mobName + " moveTo: " + mapLocation + " -> "
+	// + mapTarget + " along " + path);
     }
 
     protected void updatePosition() {
-	// Attempting A* as per
-	// http://www.policyalmanac.org/games/aStarTutorial.htm
-
 	// Do we need to move?
 	if (mapTarget.equals(mapLocation))
 	    return; // we're where we should be
 
-	// if the path is null, we can't get there from here
-
 	// Just return if there is nowhere to go
-	MapVector next;
+	MapVector next = null;
 	if (path != null)
 	    next = path.getNextMove();
 	else
 	    return;
 
+	// System.out.println("Updating " + mobName + " who needs to move to "
+	// + next);
+
+	// if the path is null, we can't get there from here
 	if (next == null)
 	    return;
 
@@ -130,12 +137,7 @@ public abstract class Mob extends MapEntity {
 
 	// Check for movement collision
 	if (parentMap.collides(next)) {
-<<<<<<< HEAD
-	    moveList.clear();
-	    mapTarget = mapLocation;
-=======
 	    path = null;
->>>>>>> - Added marking of destination.
 	    return;
 	}
 
@@ -149,10 +151,19 @@ public abstract class Mob extends MapEntity {
 
     public void gameUpdate() {
 	// TODO: this should take the event queue into account
-	if (count-- <= 0) {
-	    updatePosition();
-	    count = 20;
-	}
+    }
+
+    @Override
+    public String toString() {
+	return getMobName();
+    }
+
+    public String getMobName() {
+	return mobName;
+    }
+
+    public void setMobName(String mobName) {
+	this.mobName = mobName;
     }
 }
 
@@ -162,7 +173,7 @@ class LocalPlayerMob extends Mob {
 
     public LocalPlayerMob(LevelMap lm) {
 	super(lm);
-	mobName = "Local Player";
+	setMobName("Local Player");
 	canOpendoors = true;
 
 	try {
@@ -172,6 +183,11 @@ class LocalPlayerMob extends Mob {
 	} catch (IOException e) {
 	    e.printStackTrace();
 	}
+    }
+
+    @Override
+    public long nextUpdateTime() {
+	return 50L; // move every 50 ticks
     }
 
     @Override
@@ -198,19 +214,11 @@ class LocalPlayerMob extends Mob {
 	}
 
 	// Draw the target if we need to move
-<<<<<<< HEAD
-	if ((moveList != null) && (!moveList.isEmpty())) {
-	    g.setColor(Color.green);
-	    g.drawOval(parentMap.mapXToUI(mapTarget.getX()),
-		    parentMap.mapYToUI(mapTarget.getY()),
-		    parentMap.blockSize, parentMap.blockSize);
-=======
 	if ((path != null) && (path.movesLeft() > 2)) {
 	    g.setColor(Color.green);
 	    g.drawOval(parentMap.mapXToUI(mapTarget.getX()),
 		    parentMap.mapYToUI(mapTarget.getY()), parentMap.blockSize,
 		    parentMap.blockSize);
->>>>>>> - Added marking of destination.
 	}
     }
 }
