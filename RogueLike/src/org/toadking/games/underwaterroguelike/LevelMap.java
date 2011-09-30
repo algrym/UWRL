@@ -26,7 +26,7 @@ public class LevelMap {
 	    mapWindowMaxY = Integer.MAX_VALUE;
     private MapVector lbHighlight;
     private MapVector actionTarget;
-    
+
     private long randSeed;
     static Random rnd = new Random();
 
@@ -356,14 +356,11 @@ public class LevelMap {
 	// Draw the player
 	LocalPlayer.draw(g);
 
-<<<<<<< HEAD
-=======
 	// Draw the mobs
 	for (Mob m : mobList) {
 	    m.draw(g);
 	}
 
->>>>>>> - Added marking of destination.
 	// Highlight the position of the character's next move
 	g.setColor(Color.white);
 	if (LocalPlayer.mapTarget.equals(LocalPlayer.mapLocation))
@@ -383,21 +380,11 @@ public class LevelMap {
 		    mapXToUI(lbHighlight.getX()) - blockSize,
 		    mapYToUI(lbHighlight.getY()) - (int) (0.2 * blockSize));
 	}
-<<<<<<< HEAD
-	
-=======
-
->>>>>>> - Added marking of destination.
 	// Highlight the action target
 	if (actionTarget != null) {
 	    g.setColor(Color.red);
 	    g.drawOval(mapXToUI(actionTarget.getX()),
-<<<<<<< HEAD
-		    mapYToUI(actionTarget.getY()),
-		    blockSize, blockSize);
-=======
 		    mapYToUI(actionTarget.getY()), blockSize, blockSize);
->>>>>>> - Added marking of destination.
 	}
     }
 
@@ -565,10 +552,6 @@ public class LevelMap {
     }
 
     public void clickAction(int x, int y) {
-<<<<<<< HEAD
-	 actionTarget = new MapVector(uiXToMap(x), uiYToMap(y));
-=======
 	actionTarget = new MapVector(uiXToMap(x), uiYToMap(y));
->>>>>>> - Added marking of destination.
     }
 }
