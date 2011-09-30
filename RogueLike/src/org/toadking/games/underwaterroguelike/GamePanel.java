@@ -9,11 +9,11 @@ import javax.swing.event.MouseInputAdapter;
 
 public class GamePanel extends JPanel implements Runnable {
     private static final long serialVersionUID = 1L;
-    private static final int PWIDTH = 1024;
-    private static final int PHEIGHT = 768;
+    private int windowWidth = 1024;
+    private int windowHeight = 768;
     private static final int NO_DELAYS_PER_YIELD = 16;
-    private static int MAX_FRAME_SKIPS = 2;
-    private static int period = 10; // period between drawing in ms
+    private static final int MAX_FRAME_SKIPS = 20;
+    private static final int period = 10; // period between drawing in ms
 
     private LevelMap currentLevel;
 
@@ -185,7 +185,7 @@ public class GamePanel extends JPanel implements Runnable {
 
     public GamePanel() {
 	setBackground(Color.white);
-	setPreferredSize(new Dimension(PWIDTH, PHEIGHT));
+	setPreferredSize(new Dimension(windowWidth, windowHeight));
 
 	setFocusable(true);
 	requestFocus(); // JPanel now receives key events
@@ -206,6 +206,17 @@ public class GamePanel extends JPanel implements Runnable {
 	// Create game components
 	currentLevel = new LevelMap();
 
+	// recalculate window size when we get that event
+	this.addComponentListener(new java.awt.event.ComponentAdapter() {
+	    public void componentResized(ComponentEvent e) {
+		Dimension windowSize = getSize();
+		windowWidth = (int) Math.round(windowSize.getWidth());
+		windowHeight = (int) Math.round(windowSize.getHeight());
+		currentLevel.fixWindowEdges(windowWidth, windowHeight);
+		dbImage2D = null;
+	    }
+	});
+
 	// listen for mouse wheel movement
 	addMouseWheelListener(new MouseWheelListener() {
 	    public void mouseWheelMoved(MouseWheelEvent e) {
@@ -222,22 +233,12 @@ public class GamePanel extends JPanel implements Runnable {
 		if (e.getButton() == MouseEvent.BUTTON1) {
 		    if (e.getClickCount() == 2)
 			// DOUBLE LEFT CLICK
-<<<<<<< HEAD
-			currentLevel.movePlayerClick(e.getX(), e.getY());
-=======
 			currentLevel.clickAction(e.getX(), e.getY());
->>>>>>> - Added marking of destination.
 		    else
 			// LEFT CLICK
 			currentLevel.lookAt(e.getX(), e.getY());
 		} else if (e.getButton() == MouseEvent.BUTTON3) {
-		    // RIGHT CLICK
-<<<<<<< HEAD
-		    currentLevel.clickAction(e.getX(), e.getY());
-=======
 		    currentLevel.movePlayerClick(e.getX(), e.getY());
-
->>>>>>> - Added marking of destination.
 		}
 	    }
 	});
@@ -362,7 +363,7 @@ public class GamePanel extends JPanel implements Runnable {
     private void gameRender() {
 	// draw the current frame to an image buffer
 	if (dbImage2D == null) {
-	    dbImage2D = gc.createCompatibleImage(PWIDTH, PHEIGHT,
+	    dbImage2D = gc.createCompatibleImage(windowWidth, windowHeight,
 		    BufferedImage.TYPE_INT_ARGB);
 	    if (dbImage2D == null) {
 		System.out.println("dbImage2D is null!");
@@ -381,7 +382,7 @@ public class GamePanel extends JPanel implements Runnable {
 	}
 
 	// draw game elements here
-	currentLevel.drawMap(dbg2D, PWIDTH, PHEIGHT);
+	currentLevel.drawMap(dbg2D, windowWidth, windowHeight);
     }
 
     public void paintComponent(Graphics g) {
