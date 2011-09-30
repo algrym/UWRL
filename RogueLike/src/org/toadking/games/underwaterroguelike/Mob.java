@@ -9,6 +9,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -100,8 +101,8 @@ public abstract class Mob extends MapEntity implements GameQueueObject {
 
 	path = new PathVector(parentMap, canOpendoors, mapLocation, mapTarget);
 
-	// System.out.println(mobName + " moveTo: " + mapLocation + " -> "
-	// + mapTarget + " along " + path);
+//	System.out.println(mobName + " moveTo: " + mapLocation + " -> "
+//		+ mapTarget + " along " + path);
     }
 
     protected void updatePosition() {
@@ -177,9 +178,7 @@ class LocalPlayerMob extends Mob {
 	canOpendoors = true;
 
 	try {
-	    icon = ImageIO
-		    .read(new File(
-			    "bin/org/toadking/games/underwaterroguelike/Images/Player.png"));
+	    icon = ImageIO.read(getClass().getResource("Images/Player.png"));
 	} catch (IOException e) {
 	    e.printStackTrace();
 	}

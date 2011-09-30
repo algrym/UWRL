@@ -63,6 +63,11 @@ public class MapVector {
 		(int) Math.round(this.Y * d));
     }
 
+    public Double distanceTo(final MapVector other) {
+	return Math.sqrt(((other.X - this.X) * (other.X - this.X))
+		+ ((other.Y - this.Y) * (other.Y - this.Y)));
+    }
+
     @Override
     public String toString() {
 	return new String("(" + X + ", " + Y + ")");

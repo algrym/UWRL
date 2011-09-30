@@ -7,12 +7,31 @@ public class Zombie extends Mob {
     int stepCount = 0;
     int chatCount = 0;
     boolean isChatty = false;
+    boolean isVegan = false;
+    String sayText = "Brains!";
+
+    private void updateSayText() {
+	String s = "!";
+
+	// Zombies feel self-doubt too.
+	if (parentMap.getRand(0, 10) < 2)
+	    s = "?";
+
+	if (isVegan)
+	    sayText = "Grains" + s;
+	else
+	    sayText = "Brains" + s;
+    }
 
     public Zombie(LevelMap lm) {
 	super(lm);
 	setMobName("Zombie!");
 	canOpendoors = false; // Zombies are dumb
 	facing = facing.getDirection(parentMap.getRand(0, 7));
+
+	// Create 1 in 100 zombies as vegan!
+	if (parentMap.getRand(0, 100) < 2)
+	    isVegan = true;
     }
 
     public Zombie(LevelMap lm, MapVector node) {
@@ -30,14 +49,8 @@ public class Zombie extends Mob {
     public void gameUpdate() {
 	// Wander around!
 
-	int r = parentMap.getRand(0, 10000);
-	if (r < stepCount) { // change direction with increasing chance after
-			     // each step
-	    facing = facing.getDirection(parentMap.getRand(0, 7));
-	    stepCount = 0;
-	}
-
-	r = parentMap.getRand(0, 1000000);
+	// Figure out if we should say stuff ... like "Brains!"
+	int r = parentMap.getRand(0, 1000000);
 	if (isChatty) {
 	    if (chatCount <= 0) {
 		isChatty = false;
@@ -45,10 +58,31 @@ public class Zombie extends Mob {
 	    }
 	} else if (r < chatCount) {
 	    isChatty = true;
+	    updateSayText();
 	}
 
-	// Move in the direction we're facing
-	moveTo(mapLocation.add(facing.getUnitVector()));
+	// Before we consider where the zombie should go, are we close to the
+	// player?
+	int d = (int) Math.round(mapLocation
+		.distanceTo(parentMap.LocalPlayer.mapLocation));
+
+	// Chase player ... if we're not vegan
+	if ((d < 10) && (!isVegan)) {
+	    if (!mapTarget.equals(parentMap.LocalPlayer.mapLocation)) {
+		moveTo(parentMap.LocalPlayer.mapLocation);
+//		System.out.println(getMobName() + " is " + d + " from player.");
+	    }
+	} else {
+	    r = parentMap.getRand(0, 10000);
+	    if (r < stepCount) { // change direction with increasing chance
+				 // after
+				 // each step
+		facing = facing.getDirection(parentMap.getRand(0, 7));
+		stepCount = 0;
+	    }
+	    // Move in the direction we're facing
+	    moveTo(mapLocation.add(facing.getUnitVector()));
+	}
     }
 
     @Override
@@ -61,7 +95,7 @@ public class Zombie extends Mob {
 
 	if (isChatty) {
 	    chatCount -= 5;
-	    g.drawString("Brains!", parentMap.mapXToUI(mapLocation.getX())
+	    g.drawString(sayText, parentMap.mapXToUI(mapLocation.getX())
 		    - parentMap.blockSize,
 		    parentMap.mapYToUI(mapLocation.getY())
 			    - (int) (0.2 * parentMap.blockSize));
@@ -71,7 +105,7 @@ public class Zombie extends Mob {
 
     @Override
     public long nextUpdateTime() {
-	return 200L + parentMap.getRand(0, 200); // move every few ticks, plus a
+	return 400L + parentMap.getRand(0, 400); // move every few ticks, plus a
 						 // random amount
     }
 }

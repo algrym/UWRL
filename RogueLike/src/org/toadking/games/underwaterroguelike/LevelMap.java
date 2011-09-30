@@ -429,12 +429,12 @@ public class LevelMap {
 		return true;
 	}
 
-	// check for collisions with other mobs
-	for (Mob m : mobList) {
-	    if ((mapX == m.mapLocation.getX())
-		    && (mapY == m.mapLocation.getY()))
-		return true;
-	}
+	// chefor (Mob m : mobList) {
+//	    if ((mapX == m.mapLocation.getX())
+//		    && (mapY == m.mapLocation.getY()))
+//		return true;
+//	}ck for collisions with other mobs
+//	
 
 	return false; // Looks clear.
     }
